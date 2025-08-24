@@ -1,32 +1,61 @@
-const base_url = "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json";
+// ✅ Use base API (no API key needed)
+const base_url = "https://open.er-api.com/v6/latest";
 
 const dropdowns = document.querySelectorAll(".dropdown select");
-const btn = document.querySelector("from button");
+const btn = document.querySelector("form button");
+const fromCurr = document.querySelector(".from select");
+const toCurr = document.querySelector(".to select");
+const msg = document.querySelector(".msg");
 
-
-for(let select of dropdowns){
-    for(currCode in countryList){
+// Populate dropdowns with currency list
+for (let select of dropdowns) {
+    for (currCode in countryList) {
         let newOption = document.createElement("option");
         newOption.innerText = currCode;
         newOption.value = currCode;
-        if(select.name === "from" && currCode === "USD"){
+
+        if (select.name === "from" && currCode === "USD") {
             newOption.selected = "selected";
-        }else if(select.name === "to" && currCode === "INR"){
+        } else if (select.name === "to" && currCode === "INR") {
             newOption.selected = "selected";
         }
+
         select.append(newOption);
     }
 
-    select.addEventListener("change", (evt) =>{
+    select.addEventListener("change", (evt) => {
         updateFlag(evt.target);
     });
 }
 
-const updateFlag = (element) =>{
+// Update flag when currency changes
+const updateFlag = (element) => {
     let currCode = element.value;
     let countryCode = countryList[currCode];
     let newSrc = `https://flagsapi.com/${countryCode}/flat/64.png`;
     let img = element.parentElement.querySelector("img");
     img.src = newSrc;
-}
+};
 
+// Fetch exchange rate on button click
+btn.addEventListener("click", async (evt) => {
+    evt.preventDefault();
+
+    let amount = document.querySelector(".amount input");
+    let amtVal = amount.value;
+
+    if (amtVal === "" || amtVal < 1) {
+        amtVal = 1;
+        amount.value = "1";
+    }
+
+    // ✅ Correct API call
+    const url = `${base_url}/${fromCurr.value}`;
+    let response = await fetch(url);
+    let data = await response.json();
+
+    let rate = data.rates[toCurr.value];
+    let finalAmount = (amtVal * rate).toFixed(2);
+
+    msg.innerText = `${amtVal} ${fromCurr.value} = ${finalAmount} ${toCurr.value}`;
+});
